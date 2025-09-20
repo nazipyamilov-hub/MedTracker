@@ -7,9 +7,9 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #e8f4f8 0%, #f0f8ff 100%);
     min-height: 100vh;
-    color: #333;
+    color: #4a5568;
 }
 
 .app {
@@ -22,13 +22,13 @@ body {
 
 /* Навигация */
 .navbar {
-    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-    color: white;
+    background: linear-gradient(135deg, #a8d8ea 0%, #b8e6d3 100%);
+    color: #2d3748;
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(168, 216, 234, 0.2);
 }
 
 .nav-brand {
@@ -51,7 +51,7 @@ body {
 .nav-tab {
     background: none;
     border: none;
-    color: white;
+    color: #2d3748;
     padding: 0.75rem 1rem;
     border-radius: 8px;
     cursor: pointer;
@@ -63,11 +63,11 @@ body {
 }
 
 .nav-tab:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.4);
 }
 
 .nav-tab.active {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.6);
     font-weight: 600;
 }
 
@@ -93,15 +93,15 @@ body {
 
 /* Приветствие */
 .greeting-card {
-    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-    color: white;
+    background: linear-gradient(135deg, #b8e6d3 0%, #a8d8ea 100%);
+    color: #2d3748;
     padding: 2rem;
     border-radius: 16px;
     margin-bottom: 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.3);
+    box-shadow: 0 4px 20px rgba(184, 230, 211, 0.3);
 }
 
 .greeting-content h1 {
@@ -155,15 +155,15 @@ body {
 }
 
 .stat-card:nth-child(1) .stat-icon {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background: linear-gradient(135deg, #a8d8ea, #87ceeb);
 }
 
 .stat-card:nth-child(2) .stat-icon {
-    background: linear-gradient(135deg, #2196F3, #1976D2);
+    background: linear-gradient(135deg, #b8e6d3, #98d8c8);
 }
 
 .stat-card:nth-child(3) .stat-icon {
-    background: linear-gradient(135deg, #FF9800, #F57C00);
+    background: linear-gradient(135deg, #f7dcb4, #f4d03f);
 }
 
 .stat-info h3 {
@@ -196,14 +196,14 @@ body {
 }
 
 .medication-card.next {
-    background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
-    color: white;
+    background: linear-gradient(135deg, #ffb3ba, #ffdfba);
+    color: #2d3748;
     padding: 1.5rem;
     border-radius: 12px;
     display: flex;
     align-items: center;
     gap: 1rem;
-    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+    box-shadow: 0 4px 20px rgba(255, 179, 186, 0.3);
 }
 
 .medication-card.next .medication-icon {
@@ -237,8 +237,8 @@ body {
     background: white;
     padding: 1.5rem;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border-left: 4px solid #4A90E2;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #a8d8ea;
     transition: transform 0.3s ease;
 }
 
@@ -285,7 +285,7 @@ body {
 }
 
 .btn-take {
-    background: #4CAF50;
+    background: #98d8c8;
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -296,11 +296,11 @@ body {
 }
 
 .btn-take:hover {
-    background: #45a049;
+    background: #87ceeb;
 }
 
 .btn-take.taken {
-    background: #9E9E9E;
+    background: #d3d3d3;
 }
 
 .progress-container {
@@ -318,7 +318,7 @@ body {
 
 .progress-fill {
     height: 100%;
-    background: #4CAF50;
+    background: #98d8c8;
     transition: width 0.3s ease;
 }
 
@@ -361,11 +361,11 @@ body {
 }
 
 .member-avatar.online {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background: linear-gradient(135deg, #98d8c8, #87ceeb);
 }
 
 .member-avatar.offline {
-    background: linear-gradient(135deg, #9E9E9E, #757575);
+    background: linear-gradient(135deg, #d3d3d3, #b8b8b8);
 }
 
 .member-name {
@@ -387,11 +387,11 @@ body {
 }
 
 .status-indicator.online {
-    background: #4CAF50;
+    background: #98d8c8;
 }
 
 .status-indicator.offline {
-    background: #9E9E9E;
+    background: #d3d3d3;
 }
 
 /* Заголовки страниц */
@@ -424,13 +424,13 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #4A90E2, #357ABD);
+    background: linear-gradient(135deg, #a8d8ea, #87ceeb);
     color: white;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    box-shadow: 0 4px 15px rgba(168, 216, 234, 0.3);
 }
 
 .btn-secondary {
@@ -488,7 +488,7 @@ body {
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #4A90E2, #357ABD);
+    background: linear-gradient(135deg, #a8d8ea, #87ceeb);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -587,7 +587,7 @@ body {
 }
 
 input:checked + .toggle-slider {
-    background-color: #4A90E2;
+    background-color: #a8d8ea;
 }
 
 input:checked + .toggle-slider:before {
@@ -687,8 +687,8 @@ form {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #4A90E2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    border-color: #a8d8ea;
+    box-shadow: 0 0 0 3px rgba(168, 216, 234, 0.1);
 }
 
 /* Выбор времени */
@@ -708,7 +708,7 @@ form {
 }
 
 .btn-remove-time {
-    background: #FF6B6B;
+    background: #ffb3ba;
     color: white;
     border: none;
     padding: 0.5rem;
@@ -718,7 +718,7 @@ form {
 }
 
 .btn-remove-time:hover {
-    background: #FF5252;
+    background: #ff9999;
 }
 
 /* Выбор цвета */
@@ -742,7 +742,7 @@ form {
 }
 
 .color-option.active {
-    border-color: #4A90E2;
+    border-color: #a8d8ea;
     transform: scale(1.1);
 }
 
@@ -752,6 +752,186 @@ form {
     gap: 1rem;
     justify-content: flex-end;
     margin-top: 1.5rem;
+}
+
+/* Статистика */
+.chart-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.history-filters {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.history-filters input[type="date"] {
+    padding: 0.5rem;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.history-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th {
+    background: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #2d3748;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.history-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.status-taken {
+    color: #98d8c8;
+    font-weight: 600;
+}
+
+.status-missed {
+    color: #ffb3ba;
+    font-weight: 600;
+}
+
+/* Поиск и фильтры лекарств */
+.search-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.75rem;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.filter-select {
+    padding: 0.75rem;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+}
+
+/* Советы по здоровью */
+.health-tips {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.tip-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #b8e6d3;
+}
+
+.tip-card h3 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tip-card p {
+    color: #4a5568;
+    line-height: 1.6;
+}
+
+/* Шаблоны лекарств */
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.template-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.template-card:hover {
+    transform: translateY(-2px);
+    border-color: #a8d8ea;
+}
+
+.template-card h3 {
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.template-card p {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Напоминания */
+.reminder-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1rem;
+    border-left: 4px solid #f7dcb4;
+}
+
+.reminder-card.upcoming {
+    border-left-color: #ffb3ba;
+}
+
+.reminder-time {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.reminder-medication {
+    color: #4a5568;
 }
 
 /* Адаптивность */

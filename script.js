@@ -1,7 +1,7 @@
 // Глобальные переменные
 let medications = JSON.parse(localStorage.getItem('medications')) || [];
 let familyMembers = JSON.parse(localStorage.getItem('familyMembers')) || [];
-let selectedColor = '#FF6B6B';
+let selectedColor = '#a8d8ea';
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
@@ -22,6 +22,8 @@ function initializeApp() {
     updateProfileStats();
     renderMedications();
     renderFamilyMembers();
+    updateUpcomingReminders();
+    setupReminderNotifications();
 }
 
 // Настройка обработчиков событий
@@ -79,10 +81,16 @@ function switchTab(tabName) {
     if (tabName === 'home') {
         updateTodayMedications();
         updateFamilyStatus();
+        updateUpcomingReminders();
     } else if (tabName === 'medications') {
         renderMedications();
     } else if (tabName === 'family') {
         renderFamilyMembers();
+    } else if (tabName === 'statistics') {
+        updateStatistics();
+        updateHistoryTable();
+    } else if (tabName === 'tips') {
+        // Советы загружаются статически
     } else if (tabName === 'profile') {
         updateProfileStats();
     }
@@ -246,6 +254,13 @@ function markMedicationTaken(medicationId) {
     medication.lastTaken = today;
     medication.takenToday = isToday ? medication.takenToday + 1 : 1;
     
+    // Добавляем в историю
+    const currentTime = new Date().toLocaleTimeString('ru-RU', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    addToHistory(medicationId, currentTime, 'taken');
+    
     saveMedications();
     updateTodayMedications();
     updateStats();
@@ -257,7 +272,15 @@ function markMedicationTaken(medicationId) {
 
 // Рендеринг всех лекарств
 function renderMedications() {
+    filterMedications();
+}
+
+// Фильтрация и сортировка лекарств
+function filterMedications() {
     const container = document.getElementById('medications-grid');
+    const searchTerm = document.getElementById('medication-search')?.value.toLowerCase() || '';
+    const filterValue = document.getElementById('medication-filter')?.value || 'all';
+    const sortValue = document.getElementById('medication-sort')?.value || 'name';
     
     if (medications.length === 0) {
         container.innerHTML = `
@@ -273,7 +296,57 @@ function renderMedications() {
         return;
     }
 
-    container.innerHTML = medications.map(med => createMedicationCard(med)).join('');
+    let filteredMedications = medications.filter(med => {
+        // Поиск по названию
+        const matchesSearch = med.name.toLowerCase().includes(searchTerm);
+        
+        // Фильтрация по статусу
+        let matchesFilter = true;
+        switch (filterValue) {
+            case 'active':
+                matchesFilter = med.isActive;
+                break;
+            case 'completed':
+                matchesFilter = !med.isActive || med.takenToday >= med.totalToday;
+                break;
+            case 'today':
+                matchesFilter = getTodayMedications().some(todayMed => todayMed.id === med.id);
+                break;
+        }
+        
+        return matchesSearch && matchesFilter;
+    });
+
+    // Сортировка
+    filteredMedications.sort((a, b) => {
+        switch (sortValue) {
+            case 'name':
+                return a.name.localeCompare(b.name);
+            case 'time':
+                const aTime = a.times[0] || '23:59';
+                const bTime = b.times[0] || '23:59';
+                return aTime.localeCompare(bTime);
+            case 'progress':
+                const aProgress = a.totalToday > 0 ? (a.takenToday / a.totalToday) : 0;
+                const bProgress = b.totalToday > 0 ? (b.takenToday / b.totalToday) : 0;
+                return bProgress - aProgress;
+            default:
+                return 0;
+        }
+    });
+
+    if (filteredMedications.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h3>Лекарства не найдены</h3>
+                <p>Попробуйте изменить параметры поиска или фильтрации</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = filteredMedications.map(med => createMedicationCard(med)).join('');
 }
 
 // Добавление лекарства
@@ -561,4 +634,430 @@ function showNotification(message, type = 'info') {
             }
         }, 300);
     }, 3000);
+}
+
+// ==================== СТАТИСТИКА ====================
+
+// Глобальные переменные для статистики
+let medicationHistory = JSON.parse(localStorage.getItem('medicationHistory')) || [];
+
+// Обновление статистики
+function updateStatistics() {
+    const period = document.getElementById('statistics-period').value;
+    const endDate = new Date();
+    let startDate = new Date();
+    
+    switch (period) {
+        case 'week':
+            startDate.setDate(endDate.getDate() - 7);
+            break;
+        case 'month':
+            startDate.setMonth(endDate.getMonth() - 1);
+            break;
+        case '3months':
+            startDate.setMonth(endDate.getMonth() - 3);
+            break;
+    }
+    
+    const stats = calculateStatistics(startDate, endDate);
+    
+    document.getElementById('stats-compliance').textContent = stats.compliance + '%';
+    document.getElementById('stats-taken').textContent = stats.taken;
+    document.getElementById('stats-missed').textContent = stats.missed;
+    document.getElementById('stats-streak').textContent = stats.streak;
+    
+    updateChart(stats);
+}
+
+// Расчет статистики
+function calculateStatistics(startDate, endDate) {
+    let totalDoses = 0;
+    let takenDoses = 0;
+    let missedDoses = 0;
+    let currentStreak = 0;
+    let maxStreak = 0;
+    
+    const currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+        const dateString = currentDate.toDateString();
+        const dayDoses = getDayDoses(dateString);
+        
+        if (dayDoses.total > 0) {
+            totalDoses += dayDoses.total;
+            takenDoses += dayDoses.taken;
+            missedDoses += dayDoses.missed;
+            
+            if (dayDoses.taken === dayDoses.total) {
+                currentStreak++;
+                maxStreak = Math.max(maxStreak, currentStreak);
+            } else {
+                currentStreak = 0;
+            }
+        }
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    const compliance = totalDoses > 0 ? Math.round((takenDoses / totalDoses) * 100) : 0;
+    
+    return {
+        compliance,
+        taken: takenDoses,
+        missed: missedDoses,
+        streak: maxStreak,
+        total: totalDoses
+    };
+}
+
+// Получение доз за день
+function getDayDoses(dateString) {
+    const dayHistory = medicationHistory.filter(entry => entry.date === dateString);
+    const total = dayHistory.length;
+    const taken = dayHistory.filter(entry => entry.status === 'taken').length;
+    const missed = total - taken;
+    
+    return { total, taken, missed };
+}
+
+// Обновление графика
+function updateChart(stats) {
+    const canvas = document.getElementById('medicationChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Очищаем canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Рисуем простой график
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 3;
+    
+    // Фон круга
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fill();
+    
+    // Дугa для соблюдения режима
+    const complianceAngle = (stats.compliance / 100) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, -Math.PI / 2, -Math.PI / 2 + complianceAngle);
+    ctx.lineWidth = 20;
+    ctx.strokeStyle = '#98d8c8';
+    ctx.stroke();
+    
+    // Текст в центре
+    ctx.fillStyle = '#2d3748';
+    ctx.font = 'bold 24px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(stats.compliance + '%', centerX, centerY - 10);
+    ctx.font = '16px Inter';
+    ctx.fillText('Соблюдение', centerX, centerY + 15);
+}
+
+// Обновление таблицы истории
+function updateHistoryTable() {
+    const fromDate = document.getElementById('history-date-from').value;
+    const toDate = document.getElementById('history-date-to').value;
+    
+    // Устанавливаем значения по умолчанию
+    if (!fromDate || !toDate) {
+        const today = new Date();
+        const weekAgo = new Date();
+        weekAgo.setDate(today.getDate() - 7);
+        
+        document.getElementById('history-date-from').value = weekAgo.toISOString().split('T')[0];
+        document.getElementById('history-date-to').value = today.toISOString().split('T')[0];
+    }
+    
+    const startDate = new Date(document.getElementById('history-date-from').value);
+    const endDate = new Date(document.getElementById('history-date-to').value);
+    
+    const filteredHistory = medicationHistory.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= startDate && entryDate <= endDate;
+    }).sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+    
+    const tbody = document.querySelector('#history-table tbody');
+    tbody.innerHTML = '';
+    
+    if (filteredHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">Нет данных за выбранный период</td></tr>';
+        return;
+    }
+    
+    filteredHistory.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${formatDate(entry.date)}</td>
+            <td>${entry.medicationName}</td>
+            <td>${entry.time}</td>
+            <td class="${entry.status === 'taken' ? 'status-taken' : 'status-missed'}">
+                <i class="fas fa-${entry.status === 'taken' ? 'check' : 'times'}"></i>
+                ${entry.status === 'taken' ? 'Принято' : 'Пропущено'}
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Форматирование даты
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+// Экспорт статистики
+function exportStatistics() {
+    const period = document.getElementById('statistics-period').value;
+    const endDate = new Date();
+    let startDate = new Date();
+    
+    switch (period) {
+        case 'week':
+            startDate.setDate(endDate.getDate() - 7);
+            break;
+        case 'month':
+            startDate.setMonth(endDate.getMonth() - 1);
+            break;
+        case '3months':
+            startDate.setMonth(endDate.getMonth() - 3);
+            break;
+    }
+    
+    const stats = calculateStatistics(startDate, endDate);
+    
+    // Создаем CSV контент
+    let csvContent = 'Дата,Лекарство,Время,Статус\n';
+    
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+        const dateString = currentDate.toDateString();
+        const dayHistory = medicationHistory.filter(entry => entry.date === dateString);
+        
+        if (dayHistory.length === 0) {
+            csvContent += `${formatDate(dateString)},Нет данных,,\n`;
+        } else {
+            dayHistory.forEach(entry => {
+                csvContent += `${formatDate(dateString)},${entry.medicationName},${entry.time},${entry.status === 'taken' ? 'Принято' : 'Пропущено'}\n`;
+            });
+        }
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // Добавляем статистику
+    csvContent += `\nСтатистика за период ${period}\n`;
+    csvContent += `Соблюдение режима,${stats.compliance}%\n`;
+    csvContent += `Принято доз,${stats.taken}\n`;
+    csvContent += `Пропущено доз,${stats.missed}\n`;
+    csvContent += `Максимальная серия,${stats.streak} дней\n`;
+    
+    // Скачиваем файл
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `medtracker_statistics_${period}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification('Статистика экспортирована!', 'success');
+}
+
+// Добавление записи в историю
+function addToHistory(medicationId, time, status) {
+    const medication = medications.find(med => med.id === medicationId);
+    if (!medication) return;
+    
+    const entry = {
+        id: Date.now().toString(),
+        medicationId,
+        medicationName: medication.name,
+        time,
+        date: new Date().toDateString(),
+        status, // 'taken' или 'missed'
+        timestamp: new Date().toISOString()
+    };
+    
+    medicationHistory.push(entry);
+    localStorage.setItem('medicationHistory', JSON.stringify(medicationHistory));
+}
+
+// ==================== СИСТЕМА НАПОМИНАНИЙ ====================
+
+// Обновление предстоящих напоминаний
+function updateUpcomingReminders() {
+    const container = document.getElementById('upcoming-reminders');
+    if (!container) return;
+    
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const upcomingReminders = [];
+    
+    // Находим напоминания на ближайшие 4 часа
+    medications.forEach(medication => {
+        if (!medication.isActive) return;
+        
+        medication.times.forEach(time => {
+            const [hours, minutes] = time.split(':').map(Number);
+            const medTime = hours * 60 + minutes;
+            const timeDiff = medTime - currentTime;
+            
+            // Если напоминание в ближайшие 4 часа
+            if (timeDiff > 0 && timeDiff <= 240) {
+                const reminderTime = new Date();
+                reminderTime.setHours(hours, minutes, 0, 0);
+                
+                upcomingReminders.push({
+                    medication,
+                    time: time,
+                    timeString: reminderTime.toLocaleTimeString('ru-RU', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    }),
+                    minutesUntil: Math.floor(timeDiff)
+                });
+            }
+        });
+    });
+    
+    // Сортируем по времени
+    upcomingReminders.sort((a, b) => a.minutesUntil - b.minutesUntil);
+    
+    if (upcomingReminders.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-bell"></i>
+                <p>Нет напоминаний на ближайшее время</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = upcomingReminders.slice(0, 3).map(reminder => `
+        <div class="reminder-card ${reminder.minutesUntil <= 30 ? 'upcoming' : ''}">
+            <div class="reminder-time">
+                <i class="fas fa-clock"></i>
+                ${reminder.timeString}
+                <span style="font-size: 0.8em; color: #666; margin-left: 0.5rem;">
+                    (через ${reminder.minutesUntil} мин)
+                </span>
+            </div>
+            <div class="reminder-medication">
+                <i class="fas fa-pills" style="color: ${reminder.medication.color};"></i>
+                ${reminder.medication.name} - ${reminder.medication.dosage}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Настройка уведомлений
+function setupReminderNotifications() {
+    // Проверяем поддержку уведомлений
+    if (!('Notification' in window)) {
+        console.log('Уведомления не поддерживаются в этом браузере');
+        return;
+    }
+    
+    // Запрашиваем разрешение
+    if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Разрешение на уведомления получено');
+            }
+        });
+    }
+    
+    // Проверяем напоминания каждую минуту
+    setInterval(checkReminders, 60000);
+}
+
+// Проверка напоминаний
+function checkReminders() {
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    medications.forEach(medication => {
+        if (!medication.isActive) return;
+        
+        medication.times.forEach(time => {
+            const [hours, minutes] = time.split(':').map(Number);
+            const medTime = hours * 60 + minutes;
+            const timeDiff = medTime - currentTime;
+            
+            // Если время приема настало (с точностью до 1 минуты)
+            if (timeDiff === 0 || (timeDiff > -1 && timeDiff < 1)) {
+                showReminderNotification(medication, time);
+            }
+        });
+    });
+}
+
+// Показ уведомления о напоминании
+function showReminderNotification(medication, time) {
+    const reminderKey = `reminder_${medication.id}_${time}_${new Date().toDateString()}`;
+    
+    // Проверяем, не показывали ли мы уже это напоминание сегодня
+    if (localStorage.getItem(reminderKey)) {
+        return;
+    }
+    
+    // Отмечаем, что напоминание показано
+    localStorage.setItem(reminderKey, 'true');
+    
+    // Показываем уведомление браузера
+    if (Notification.permission === 'granted') {
+        const notification = new Notification('Время приема лекарства!', {
+            body: `${medication.name} - ${medication.dosage}`,
+            icon: '/favicon.ico',
+            tag: `medication_${medication.id}`,
+            requireInteraction: true
+        });
+        
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
+        
+        // Автоматически закрываем через 10 секунд
+        setTimeout(() => {
+            notification.close();
+        }, 10000);
+    }
+    
+    // Показываем уведомление в приложении
+    showNotification(`Время принять ${medication.name}!`, 'success');
+    
+    // Воспроизводим звук (если разрешено)
+    playReminderSound();
+}
+
+// Воспроизведение звука напоминания
+function playReminderSound() {
+    // Создаем простой звуковой сигнал
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
 }
